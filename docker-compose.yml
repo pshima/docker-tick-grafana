@@ -1,0 +1,71 @@
+version: '3'
+services:
+  influxdb:
+    image: influxdb:2.3
+    volumes:
+      - ./tick/influxdb/data:/var/lib/influxdb
+      - ./tick/influxdb/config/:/etc/influxdb/
+    ports:
+      - "8086:8086"
+      - "8082:8082"
+      - "8089:8089"
+    networks:
+      - tick
+    restart: always
+
+  telegraf:
+    image: telegraf:1.23
+    volumes:
+      - ./tick/telegraf/:/etc/telegraf/
+      # for monitoring docker containers on the host
+      - /var/run/docker.sock:/var/run/docker.sock
+    depends_on:
+      - influxdb
+    networks:
+      - tick
+    restart: always
+
+  kapacitor:
+    image: kapacitor:1.6
+    volumes:
+      - ./tick/kapacitor/data/:/var/lib/kapacitor
+      - ./tick/kapacitor/config/:/etc/kapacitor/
+    ports:
+      - "9092:9092"
+    depends_on:
+      - influxdb
+    networks:
+      - tick
+    restart: always
+
+  chronograf:
+    image: chronograf:1.9
+    volumes:
+      - ./tick/chronograf/data/:/var/lib/chronograf/
+    ports:
+      - "8888:8888"
+    depends_on:
+      - kapacitor
+      - influxdb
+      - telegraf
+    networks:
+      - tick
+    restart: always
+
+  grafana:
+    image: grafana/grafana
+    volumes:
+      - ./tick/grafana/data/:/var/lib/grafana/
+    ports:
+      - "3000:3000"
+    user: "472"
+    depends_on:
+      - influxdb
+    networks:
+      - tick
+    restart: always
+
+networks:
+  tick:
+    driver: bridge
+
