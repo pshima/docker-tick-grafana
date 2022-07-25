@@ -1,27 +1,3 @@
-# Telegraf Configuration
-#
-# Telegraf is entirely plugin driven. All metrics are gathered from the
-# declared inputs, and sent to the declared outputs.
-#
-# Plugins must be declared in here to be active.
-# To deactivate a plugin, comment out the name and any variables.
-#
-# Use 'telegraf -config telegraf.conf -test' to see what metrics a config
-# file would generate.
-#
-# Environment variables can be used anywhere in this config file, simply surround
-# them with ${}. For strings the variable must be within quotes (ie, "${STR_VAR}"),
-# for numbers and booleans they should be plain (ie, ${INT_VAR}, ${BOOL_VAR})
-
-
-# Global tags can be specified here in key="value" format.
-[global_tags]
-  # dc = "us-east-1" # will tag all metrics with dc=us-east-1
-  # rack = "1a"
-  ## Environment variables can be used as tags, and throughout the config file
-  # user = "$USER"
-
-
 # Configuration for telegraf agent
 [agent]
   ## Default data collection interval for all inputs
@@ -90,62 +66,79 @@
   ## If set to -1, no archives are removed.
   # logfile_rotation_max_archives = 5
 
+  ## Pick a timezone to use when logging or type 'local' for local time.
+  ## Example: America/Chicago
+  # log_with_timezone = ""
+
   ## Override default hostname, if empty use os.Hostname()
   hostname = ""
   ## If set to true, do no set the "host" tag in the telegraf agent.
   omit_hostname = false
-
-
-###############################################################################
-#                            OUTPUT PLUGINS                                   #
-###############################################################################
 [[outputs.influxdb_v2]]
- ## The URLs of the InfluxDB cluster nodes.
- ##
- ## Multiple URLs can be specified for a single cluster, only ONE of the
- ## urls will be written to each interval.
- ## urls exp: http://127.0.0.1:8086
- urls = ["http://influxdb:8086"]
- 
- ## Token for authentication.
- token = "$DOCKER_INFLUXDB_INIT_ADMIN_TOKEN"
- 
- ## Organization is the name of the organization you wish to write to; must exist.
- organization = "admin"
- 
- ## Destination bucket to write into.
- bucket = "bucket1"
+  ## The URLs of the InfluxDB cluster nodes.
+  ##
+  ## Multiple URLs can be specified for a single cluster, only ONE of the
+  ## urls will be written to each interval.
+  ##   ex: urls = ["https://us-west-2-1.aws.cloud2.influxdata.com"]
+  urls = ["http://127.0.0.1:8086"]
 
-###############################################################################
-#                            INPUT PLUGINS                                    #
-###############################################################################
+  ## Token for authentication.
+  token = "$INFLUX_TOKEN"
 
+  ## Organization is the name of the organization you wish to write to; must exist.
+  organization = "admin"
 
-# Read metrics about cpu usage
+  ## Destination bucket to write into.
+  bucket = "bucket1"
+
+  ## The value of this tag will be used to determine the bucket.  If this
+  ## tag is not set the 'bucket' option is used as the default.
+  # bucket_tag = ""
+
+  ## If true, the bucket tag will not be added to the metric.
+  # exclude_bucket_tag = false
+
+  ## Timeout for HTTP messages.
+  # timeout = "5s"
+
+  ## Additional HTTP headers
+  # http_headers = {"X-Special-Header" = "Special-Value"}
+
+  ## HTTP Proxy override, if unset values the standard proxy environment
+  ## variables are consulted to determine which proxy, if any, should be used.
+  # http_proxy = "http://corporate.proxy:3128"
+
+  ## HTTP User-Agent
+  # user_agent = "telegraf"
+
+  ## Content-Encoding for write request body, can be set to "gzip" to
+  ## compress body or "identity" to apply no encoding.
+  # content_encoding = "gzip"
+
+  ## Enable or disable uint support for writing uints influxdb 2.0.
+  # influx_uint_support = false
+
+  ## Optional TLS Config for use on HTTP connections.
+  # tls_ca = "/etc/telegraf/ca.pem"
+  # tls_cert = "/etc/telegraf/cert.pem"
+  # tls_key = "/etc/telegraf/key.pem"
+  ## Use TLS but skip chain & host verification
+  # insecure_skip_verify = false
 [[inputs.cpu]]
   ## Whether to report per-cpu stats or not
   percpu = true
   ## Whether to report total system cpu stats or not
   totalcpu = true
-  ## If true, collect raw CPU time metrics.
+  ## If true, collect raw CPU time metrics
   collect_cpu_time = false
-  ## If true, compute and report the sum of all non-idle CPU states.
+  ## If true, compute and report the sum of all non-idle CPU states
   report_active = false
-  ## If true and the info is available then add core_id and physical_id tags
-  core_tags = false
-
-
-# Read metrics about disk usage by mount point
 [[inputs.disk]]
   ## By default stats will be gathered for all mount points.
   ## Set mount_points will restrict the stats to only the specified mount points.
   # mount_points = ["/"]
-
   ## Ignore mount points by filesystem type.
   ignore_fs = ["tmpfs", "devtmpfs", "devfs", "iso9660", "overlay", "aufs", "squashfs"]
-
-
-# Read metrics about disk IO by device
 [[inputs.diskio]]
   ## By default, telegraf will gather stats for all devices including
   ## disk partitions.
@@ -172,95 +165,24 @@
   ## The typical use case is for LVM volumes, to get the VG/LV name instead of
   ## the near-meaningless DM-0 name.
   # name_templates = ["$ID_FS_LABEL","$DM_VG_NAME/$DM_LV_NAME"]
-
-
-# Get kernel statistics from /proc/stat
-[[inputs.kernel]]
-  # no configuration
-
-
-# Read metrics about memory usage
 [[inputs.mem]]
   # no configuration
-
-
-# Get the number of processes and group them by status
+[[inputs.net]]
+  ## By default, telegraf gathers stats from any up interface (excluding loopback)
+  ## Setting interfaces will tell it to gather these explicit interfaces,
+  ## regardless of status.
+  ##
+  # interfaces = ["eth0"]
+  ##
+  ## On linux systems telegraf also collects protocol stats.
+  ## Setting ignore_protocol_stats to true will skip reporting of protocol metrics.
+  ##
+  # ignore_protocol_stats = false
+  ##
 [[inputs.processes]]
   # no configuration
-
-
-# Read metrics about swap memory usage
 [[inputs.swap]]
   # no configuration
-
-
-# Read metrics about system load & uptime
 [[inputs.system]]
   ## Uncomment to remove deprecated metrics.
   # fielddrop = ["uptime_format"]
-
-# # Query given DNS server and gives statistics
-[[inputs.dns_query]]
- ## servers to query
- servers = ["8.8.8.8", "4.2.2.1"]
-
- ## Network is the network protocol name.
- # network = "udp"
-
- ## Domains or subdomains to query.
- domains = ["www.google.com"]
-
- ## Query record type.
- ## Posible values: A, AAAA, CNAME, MX, NS, PTR, TXT, SOA, SPF, SRV.
- # record_type = "A"
-
- ## Dns server port.
- # port = 53
-
- ## Query timeout in seconds.
- # timeout = 2
-
-# # Ping given url(s) and return statistics
-[[inputs.ping]]
-  ## Hosts to send ping packets to.
-  urls = ["www.github.com","www.amazon.com","8.8.8.8","4.2.2.1"]
-
-  ## Method used for sending pings, can be either "exec" or "native".  When set
-  ## to "exec" the systems ping command will be executed.  When set to "native"
-  ## the plugin will send pings directly.
-  ##
-  ## While the default is "exec" for backwards compatibility, new deployments
-  ## are encouraged to use the "native" method for improved compatibility and
-  ## performance.
-  method = "native"
-
-  ## Number of ping packets to send per interval.  Corresponds to the "-c"
-  ## option of the ping command.
-  count = 3
-
-  ## Time to wait between sending ping packets in seconds.  Operates like the
-  ## "-i" option of the ping command.
-  ping_interval = 5.0
-
-  ## If set, the time to wait for a ping response in seconds.  Operates like
-  ## the "-W" option of the ping command.
-  timeout = 10.0
-
-  ## If set, the total ping deadline, in seconds.  Operates like the -w option
-  ## of the ping command.
-  # deadline = 10
-
-  ## Interface or source address to send ping from.  Operates like the -I or -S
-  ## option of the ping command.
-  # interface = "wlan0"
-
-  ## Specify the ping executable binary.
-  # binary = "ping"
-
-  ## Arguments for ping command. When arguments is not empty, the command from
-  ## the binary option will be used and other options (ping_interval, timeout,
-  ## etc) will be ignored.
-  # arguments = ["-c", "3"]
-
-  ## Use only IPv6 addresses when resolving a hostname.
-  # ipv6 = false
