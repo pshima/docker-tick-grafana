@@ -3,12 +3,12 @@ services:
   influxdb:
     image: influxdb:2.3.0
     volumes:
-      - ./tick/influxdb/data:/var/lib/influxdb
-      - ./tick/influxdb/config/:/etc/influxdb/
+      - ./tick/influxdb/data:/var/lib/influxdb2
+      - ./tick/influxdb/config/:/etc/influxdb2/
     ports:
       - "8086:8086"
-      - "8082:8082"
-      - "8089:8089"
+      # - "8082:8082"
+      # - "8089:8089"
     networks:
       - tick
     restart: always
@@ -22,39 +22,12 @@ services:
       # for monitoring docker containers on the host
       - /var/run/docker.sock:/var/run/docker.sock
     environment: 
-          - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=mytoken
+      DOCKER_INFLUXDB_INIT_ADMIN_TOKEN: mytoken
     depends_on:
       - influxdb
     networks:
       - tick
     restart: always
-
-  # kapacitor:
-  #   image: kapacitor:1.6
-  #   volumes:
-  #     - ./tick/kapacitor/data/:/var/lib/kapacitor
-  #     - ./tick/kapacitor/config/:/etc/kapacitor/
-  #   ports:
-  #     - "9092:9092"
-  #   depends_on:
-  #     - influxdb
-  #   networks:
-  #     - tick
-  #   restart: always
-
-  # chronograf:
-  #   image: chronograf:1.9
-  #   volumes:
-  #     - ./tick/chronograf/data/:/var/lib/chronograf/
-  #   ports:
-  #     - "8888:8888"
-  #   depends_on:
-  #     - kapacitor
-  #     - influxdb
-  #     - telegraf
-  #   networks:
-  #     - tick
-  #   restart: always
 
   # grafana:
   #   image: grafana/grafana
