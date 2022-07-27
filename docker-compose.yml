@@ -1,14 +1,12 @@
-version: '3'
+version: '4'
 services:
   influxdb:
     image: influxdb:2.3.0
     volumes:
-      - ./tick/influxdb/data:/var/lib/influxdb2
-      - ./tick/influxdb/config/:/etc/influxdb2/
+      - ./influx/influxdb/data:/var/lib/influxdb2
+      - ./influx/influxdb/config/:/etc/influxdb2/
     ports:
       - "8086:8086"
-      # - "8082:8082"
-      # - "8089:8089"
     networks:
       - tick
     restart: always
@@ -18,29 +16,16 @@ services:
   telegraf:
     image: telegraf:1.23
     volumes:
-      - ./tick/telegraf/:/etc/telegraf/
+      - ./influx/telegraf/:/etc/telegraf/
       # for monitoring docker containers on the host
       - /var/run/docker.sock:/var/run/docker.sock
     environment: 
-      DOCKER_INFLUXDB_INIT_ADMIN_TOKEN: mytoken
+      DOCKER_INFLUXDB_INIT_ADMIN_TOKEN: <your token here>
     depends_on:
       - influxdb
     networks:
       - tick
     restart: always
-
-  # grafana:
-  #   image: grafana/grafana
-  #   volumes:
-  #     - ./tick/grafana/data/:/var/lib/grafana/
-  #   ports:
-  #     - "3000:3000"
-  #   user: "472"
-  #   depends_on:
-  #     - influxdb
-  #   networks:
-  #     - tick
-  #   restart: always
 
 networks:
   tick:
