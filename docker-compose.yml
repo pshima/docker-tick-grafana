@@ -2,6 +2,7 @@ version: '4'
 services:
   influxdb:
     image: influxdb:2.3.0
+    container_name: influxdb
     volumes:
       - ./influx/influxdb/data:/var/lib/influxdb2
       - ./influx/influxdb/config/:/etc/influxdb2/
@@ -15,6 +16,7 @@ services:
 
   telegraf:
     image: telegraf:1.23
+    container_name: telegraf
     volumes:
       - ./influx/telegraf/:/etc/telegraf/
       # for monitoring docker containers on the host
